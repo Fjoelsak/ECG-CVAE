@@ -5,7 +5,7 @@
 ```
 ECG_CVAE/
 │
-├── data/                   # Raw data & optionally stored .npy files
+├── docs/                   # Documentation
 ├── output/                 # Results: plots, checkpoints, generated samples
 │
 ├── ecg_vae/                # Main module
@@ -17,14 +17,12 @@ ECG_CVAE/
 │   ├── trainer.py          # Training loop, checkpointing, evaluation
 │   ├── sampling.py         # Mahalanobis sampling, latent space sampling
 │   ├── plotting.py         # Plot functions for reconstructions and generated samples
-│   └── utils.py            # Utility functions: normalization, file loading, peak comparison, etc.
+│   └── utils.py            # Utility functions: file loading
 │
 ├── scripts/                # CLI scripts / experiments
-│   ├── train_channel.py    # Training a single channel
-│   ├── evaluate.py         # Model evaluation
-│   └── generate_samples.py # Generation of samples from latent space
+│   └── train_channel.py    # Training a single channel
 │
-├── tests/                  # Tests
+├── tests/                  # Unit Tests
 │
 ├── requirements.txt
 └── README.md

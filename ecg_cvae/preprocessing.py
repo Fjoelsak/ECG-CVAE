@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.signal import butter, filtfilt, iirnotch, medfilt, savgol_filter, find_peaks
 
-
 def signal_filter(x, fs=500.0, hp_cutoff=0.5, lp_cutoff=40.0, notch_freq=50.0, notch_Q=30.0):
     """
     Apply standard ECG preprocessing filters:
@@ -47,7 +46,6 @@ def signal_filter(x, fs=500.0, hp_cutoff=0.5, lp_cutoff=40.0, notch_freq=50.0, n
     baseline = medfilt(x_notched, kernel_size=int(fs*0.2)+1)
     x_corr = x_notched - baseline
     return x_corr
-
 
 def ecg_smoothen_npoint(x, N=5, method='mean'):
     """
@@ -97,7 +95,6 @@ def ecg_smoothen_npoint(x, N=5, method='mean'):
         return out
     raise ValueError("Input must be 1D/2D/3D")
 
-
 def _smooth_1d(sig, N, method):
     """
     Internal helper to smooth a 1D signal using mean or median filter.
@@ -135,7 +132,6 @@ def _smooth_1d(sig, N, method):
     else:
         raise ValueError("method must be 'mean' or 'median'")
 
-
 def ecg_smoothen_savgol(x, window_length=15, polyorder=4):
     """
     Apply Savitzky–Golay smoothing to a batch of ECG signals.
@@ -169,7 +165,6 @@ def ecg_smoothen_savgol(x, window_length=15, polyorder=4):
         x_smoothed[i, :] = savgol_filter(x[i, :], window_length=window_length, polyorder=polyorder, mode='interp')
     return x_smoothed
 
-
 def signal_normalize(x):
     """
     Normalize ECG range to [-1, 1].
@@ -196,6 +191,7 @@ def signal_normalize(x):
 
 
     # ------------------ Peak detection & conditioning ------------------
+
 def detect_peaks_for_dataset(data, fs=500, min_distance=200, prominence=None):
     """
     Detect R-peak–like local maxima for a batched multi-channel ECG dataset.
