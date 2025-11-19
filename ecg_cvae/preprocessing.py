@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.signal import butter, filtfilt, iirnotch, medfilt, savgol_filter
+from scipy.signal import butter, filtfilt, iirnotch, medfilt, savgol_filter, find_peaks
 
 
 def signal_filter(x, fs=500.0, hp_cutoff=0.5, lp_cutoff=40.0, notch_freq=50.0, notch_Q=30.0):
@@ -193,3 +193,68 @@ def signal_normalize(x):
         return 2 * ((x - amin) / (amax - amin)) - 1
     else:
         return np.zeros_like(x)
+
+
+    # ------------------ Peak detection & conditioning ------------------
+def detect_peaks_for_dataset(data, fs=500, min_distance=200, prominence=None):
+    """
+    Detect R-peak–like local maxima for a batched multi-channel ECG dataset.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        Input ECG data of shape (samples, channels, length).
+        Each entry data[i, ch, :] contains one ECG trace.
+    fs : int or float, optional (default=500)
+        Sampling frequency in Hz.
+    min_distance : int or float, optional (default=200)
+        Minimum distance between two peaks **in milliseconds**.
+        Converted internally to samples = min_distance/1000 * fs.
+    prominence : float or None, optional (default=None)
+        Optional prominence threshold passed to `scipy.signal.find_peaks`.
+        If None, a heuristic prominence is computed individually for each signal:
+            prom = 0.3 * (max(signal) - median(signal))
+
+    Returns
+    -------
+    peak_vecs : np.ndarray
+        Binary array of shape (samples, channels, length) with 1.0 at detected
+        peak positions and 0.0 elsewhere.
+    peak_counts : np.ndarray
+        Integer array of shape (samples, channels) containing the number of
+        detected peaks per (sample, channel).
+
+    Notes
+    -----
+    - Peak detection makes use of `scipy.signal.find_peaks`.
+    - Intended for typical ECG R-peak estimation before segmentation,
+      morphology comparison, or conditioning a VAE input.
+    - Works on arbitrary batch sizes and multi-channel ECGs.
+
+    Examples
+    --------
+    >>> data = np.random.randn(10, 2, 1000)
+    >>> peaks, counts = detect_peaks_for_dataset(data, fs=500)
+    >>> peaks.shape
+    (10, 2, 1000)
+    >>> counts.shape
+    (10, 2)
+    """
+    samples, channels, length = data.shape
+    peak_vecs = np.zeros_like(data, dtype=np.float32)
+    peak_counts = np.zeros((samples, channels), dtype=np.int32)
+    for i in range(samples):
+        for ch in range(channels):
+            sig = data[i, ch, :]
+            distance = int(min_distance / 1000.0 * fs)  # convert ms to samples
+            # heuristic for a prominance value
+            if prominence is None:
+                heur = 0.3 * (np.max(sig) - np.median(sig))
+                prom = heur if heur > 0 else None
+            else:
+                prom = prominence
+            # scipy method identifying local maxima typically corresponding to R-waves
+            peaks, props = find_peaks(sig, distance=distance, prominence=prom)
+            peak_vecs[i, ch, peaks] = 1.0  # binary vector indicating peak locations
+            peak_counts[i, ch] = len(peaks)
+    return peak_vecs, peak_counts

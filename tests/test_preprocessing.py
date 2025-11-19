@@ -9,6 +9,7 @@ from ecg_cvae.preprocessing import (
     _smooth_1d,
     ecg_smoothen_savgol,
     signal_normalize,
+    detect_peaks_for_dataset
 )
 
 # -----------------------------------------------------
@@ -142,3 +143,61 @@ def test_signal_filter_baseline_removed():
 
     # Baseline should be significantly reduced
     assert filtered.std() < signal.std()
+
+# -----------------------------------------------------
+# signal_filter
+# -----------------------------------------------------
+
+def test_detect_peaks_shape():
+    data = np.random.randn(5, 2, 1000)
+    peak_vecs, peak_counts = detect_peaks_for_dataset(data, fs=500)
+
+    assert peak_vecs.shape == (5, 2, 1000)
+    assert peak_counts.shape == (5, 2)
+
+
+def test_detect_peaks_single_peak():
+    # Kunstsignal: ein klarer Peak bei Index 500
+    data = np.zeros((1, 1, 1000))
+    data[0, 0, 500] = 10.0
+
+    peak_vecs, peak_counts = detect_peaks_for_dataset(data, fs=500)
+
+    # Der Peak sollte exakt markiert werden
+    assert peak_vecs[0, 0, 500] == 1.0
+    assert peak_counts[0, 0] == 1
+
+
+def test_detect_peaks_no_signal():
+    # Flatline → keine Peaks erwartet
+    data = np.zeros((3, 2, 800))
+
+    peak_vecs, peak_counts = detect_peaks_for_dataset(data, fs=500)
+
+    assert peak_counts.sum() == 0
+    assert peak_vecs.sum() == 0.0
+
+
+def test_detect_peaks_min_distance():
+    # Zwei Peaks nah beieinander, aber min_distance verhindert Doppeldetektion
+    data = np.zeros((1, 1, 1000))
+    data[0, 0, 100] = 5
+    data[0, 0, 120] = 5  # nur 20 ms Abstand bei fs=500
+
+    # min_distance=100 ms → nur ein Peak sollte übrig bleiben
+    peak_vecs, peak_counts = detect_peaks_for_dataset(data, fs=500, min_distance=100)
+
+    assert peak_counts[0, 0] == 1
+
+
+def test_detect_peaks_multichannel():
+    data = np.zeros((1, 2, 500))
+    data[0, 0, 100] = 4
+    data[0, 1, 200] = 7
+
+    peak_vecs, peak_counts = detect_peaks_for_dataset(data)
+
+    assert peak_counts[0, 0] == 1
+    assert peak_counts[0, 1] == 1
+    assert peak_vecs[0, 0, 100] == 1.0
+    assert peak_vecs[0, 1, 200] == 1.0
