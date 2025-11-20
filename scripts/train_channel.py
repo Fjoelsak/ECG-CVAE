@@ -15,7 +15,6 @@ def main(data_path=None, hidden_dim=128, latent_dim=24, plot_training_examples=T
         data, fname = load_data_and_preprocess(apply_filter=False, file_path=None)
     else:
         # In Colab you will download the file first, then pass its path
-        data_path = "downloaded_data.npy"  # example path
         data, fname = load_data_and_preprocess(apply_filter=False, file_path=data_path)
 
     samples, channels, length = data.shape
