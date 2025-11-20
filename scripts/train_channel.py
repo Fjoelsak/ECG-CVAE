@@ -1,32 +1,23 @@
+import argparse
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from tkinter import Tk, filedialog
 
 from ecg_cvae.preprocessing import detect_peaks_for_dataset
 from ecg_cvae.utils import load_data_and_preprocess
 from ecg_cvae.trainer import train_vae_for_channel
 
 
-# ------------------ Main ------------------
-def main(load_mode="local", hidden_dim=128, latent_dim=128, plot_training_examples=True):
+def main(data_path=None, hidden_dim=128, latent_dim=24, plot_training_examples=True):
     device = 'cuda' if os.environ.get("CUDA_VISIBLE_DEVICES") else 'cpu'
 
-    print("Select the .npy file with shape (samples, channels, length).")
-    root = Tk()
-    root.withdraw()
+    if data_path is None:
+        data, fname = load_data_and_preprocess(apply_filter=False, file_path=None)
+    else:
+        # In Colab you will download the file first, then pass its path
+        data_path = "downloaded_data.npy"  # example path
+        data, fname = load_data_and_preprocess(apply_filter=False, file_path=data_path)
 
-    file_path = filedialog.askopenfilename(
-        filetypes=[("Numpy files", "*.npy")]
-    )
-
-    if not file_path:
-        raise RuntimeError("No file selected.")
-
-    data = np.load(file_path)
-    filename = os.path.splitext(os.path.basename(file_path))[0]
-
-    data, fname = load_data_and_preprocess(data, filename, apply_filter=False)  # file selection
     samples, channels, length = data.shape
 
     # compute peak vectors & counts for whole dataset
@@ -70,9 +61,22 @@ def main(load_mode="local", hidden_dim=128, latent_dim=128, plot_training_exampl
                 axes[i].set_title(f"Chan{ch} Train example {idd}")
                 axes[i].axis('off')
             plt.tight_layout()
-            plt.savefig(os.path.join("output", "v6b3_A", f"{filename}_ch{ch}_train_examples.png"))
+            plt.savefig(os.path.join("output", "v6b3_A", f"{fname}_ch{ch}_train_examples.png"))
             plt.close()
 
 
 if __name__ == "__main__":
-    main(hidden_dim=128, latent_dim=24, plot_training_examples=True)
+    parser = argparse.ArgumentParser(
+        description="Train channel-wise CVAE for ECG data."
+    )
+
+    parser.add_argument(
+        "--data-path",
+        type=str,
+        default=None,
+        help="Path to .npy dataset file. If omitted, opens Tkinter file dialog.",
+    )
+
+    args = parser.parse_args()
+
+    main(data_path=args.data_path, hidden_dim=128, latent_dim=24, plot_training_examples=True)
