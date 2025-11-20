@@ -7,6 +7,7 @@ from ecg_cvae.dataset import ChannelDataset
 from ecg_cvae.losses import loss_fn
 from ecg_cvae.models import ConditionalVAE
 from ecg_cvae.plotting import plot_generated_samples, plot_reconstructions
+from ecg_cvae.sampling import mahalanobis_latent_sampling
 from scipy.signal import find_peaks
 from torch.utils.data import DataLoader
 

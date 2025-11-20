@@ -10,6 +10,7 @@ from ecg_cvae.trainer import train_vae_for_channel
 
 def main(data_path=None, hidden_dim=128, latent_dim=24, plot_training_examples=True):
     device = 'cuda' if os.environ.get("CUDA_VISIBLE_DEVICES") else 'cpu'
+    print("Running on device: {}".format(device))
 
     if data_path is None:
         data, fname = load_data_and_preprocess(apply_filter=False, file_path=None)
