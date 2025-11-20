@@ -1,5 +1,9 @@
 # ECG-CVAE
 
+## Link for colab
+
+- train_model.ipynb  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Fjoelsak/ECG-CVAE/blob/main/scripts/train_model.ipynb)
+
 ## Project structure
 
 ```
